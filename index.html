@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request for Quote — Mosaic Iron</title>
+<!--
+  MOSAIC IRON — Steel · Fabrication · Drafting · Project Intake / RFQ
+  Steel-focused, not steel-exclusive.
+  Principal: Shalom Marsjones · 530.802.6493 · mosaiciron@gmail.com · California
+  v2 — DXF upload → .kad conversion (parseDXF ported from KADsuite)
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#0c1824; --navy:#101c2e; --panel:#162438; --field:#0e1a2a; --hover:#1e3048;
+  --border:rgba(74,143,212,0.22); --bhi:rgba(74,143,212,0.45);
+  --blue:#4a8fd4; --blue-br:#6fb0ec;
+  --copper:#c07c30; --copper-lt:#d4923e;
+  --green:#2aaa6a; --green-br:#3fae7a; --green-dim:rgba(42,170,106,0.12);
+  --t1:#d0e8f8; --t2:#7aa8c8; --t3:#3a6080;
+  --grid:rgba(74,143,212,0.07); --grid-maj:rgba(74,143,212,0.13);
+  --ok:#3fae7a;
+  --fd:'Syne',sans-serif; --fm:'Fira Code',monospace;
+  --radius:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--fm); background:var(--void); color:var(--t1);
+  font-size:14px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+    linear-gradient(var(--grid-maj) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid-maj) 1px,transparent 1px);
+  background-size:24px 24px,24px 24px,120px 120px,120px 120px;
+}
+a{color:var(--blue-br);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* HEADER */
+header{
+  background:var(--navy);
+  background-image:
+    repeating-linear-gradient(45deg,transparent,transparent 26px,rgba(74,143,212,0.04) 26px,rgba(74,143,212,0.04) 27px),
+    repeating-linear-gradient(-45deg,transparent,transparent 26px,rgba(74,143,212,0.04) 26px,rgba(74,143,212,0.04) 27px);
+  border-bottom:2px solid var(--copper); padding:30px 24px 26px;
+}
+.hd-inner{max-width:1000px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:18px}
+.logo-name{font-family:var(--fd);font-weight:800;font-size:2.1rem;letter-spacing:0.06em;line-height:0.95;color:var(--t1)}
+.logo-name .cu{color:var(--copper-lt)}
+.logo-sub{font-family:var(--fm);font-size:0.66rem;font-weight:500;color:var(--t3);letter-spacing:0.24em;text-transform:uppercase;margin-top:7px}
+.hd-right{text-align:right}
+.rfq-badge{display:inline-block;font-family:var(--fm);font-weight:600;font-size:0.78rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--void);background:var(--copper);padding:5px 13px;border-radius:3px}
+.hd-tag{font-family:var(--fm);font-size:0.68rem;color:var(--t3);margin-top:8px;letter-spacing:0.04em}
+
+/* TAKEOFF (signature) */
+#takeoff{position:sticky;top:0;z-index:50;background:var(--void);border-bottom:1px solid var(--border);box-shadow:0 6px 18px rgba(0,0,0,0.35)}
+.to-inner{max-width:1000px;margin:0 auto;padding:11px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.to-lead{font-family:var(--fm);font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--t3);display:flex;align-items:center;gap:8px}
+.to-lead svg{width:15px;height:15px;stroke:var(--blue)}
+.to-metric{display:flex;align-items:baseline;gap:7px}
+.to-num{font-family:var(--fd);font-weight:800;font-size:1.4rem;color:var(--t3);line-height:1;transition:color .25s}
+.to-num.on{color:var(--copper-lt)}
+.to-num.on-blue{color:var(--blue-br)}
+.to-unit{font-family:var(--fm);font-size:0.64rem;color:var(--t3);letter-spacing:0.1em;text-transform:uppercase}
+.to-sep{width:1px;height:24px;background:var(--border)}
+.to-tier{margin-left:auto;font-family:var(--fm);font-size:0.72rem;font-weight:600;letter-spacing:0.13em;text-transform:uppercase;padding:5px 12px;border-radius:3px;border:1px solid var(--border);color:var(--t3);transition:all .25s}
+.to-tier.t-on{border-color:var(--bhi);color:var(--blue-br)}
+.to-tier.t-heavy{border-color:var(--copper);color:var(--copper-lt);background:rgba(192,124,48,0.08)}
+
+/* LAYOUT */
+main{max-width:1000px;margin:30px auto 70px;padding:0 18px;display:flex;flex-direction:column;gap:22px}
+.intro{font-family:var(--fm);font-size:0.92rem;color:var(--t2);line-height:1.7;max-width:78ch}
+.intro b{color:var(--t1);font-weight:500}
+
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-hd{display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(74,143,212,0.05),transparent)}
+.card-no{font-family:var(--fd);font-weight:800;font-size:1.05rem;color:var(--copper-lt);letter-spacing:0.04em;min-width:26px}
+.card-title{font-family:var(--fd);font-weight:700;font-size:1.12rem;letter-spacing:0.02em;color:var(--t1)}
+.card-note{margin-left:auto;font-family:var(--fm);font-size:0.66rem;color:var(--t3);letter-spacing:0.04em;text-align:right}
+.card-body{padding:20px}
+
+/* FIELDS */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 18px}
+.full{grid-column:1/-1}
+label.fld{display:flex;flex-direction:column;gap:6px;font-family:var(--fm);font-size:0.66rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--t2)}
+.req{color:var(--copper-lt);margin-left:3px}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select,textarea{
+  font-family:var(--fm);font-size:0.9rem;font-weight:400;text-transform:none;letter-spacing:0;
+  background:var(--field);border:1px solid var(--border);border-radius:5px;color:var(--t1);
+  padding:9px 11px;width:100%;outline:none;transition:border-color .15s,box-shadow .15s;
+}
+input::placeholder,textarea::placeholder{color:var(--t3);opacity:0.8}
+input:focus,select:focus,textarea:focus{border-color:var(--bhi);box-shadow:0 0 0 3px rgba(74,143,212,0.14)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237aa8c8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;cursor:pointer}
+select option{background:var(--navy);color:var(--t1)}
+textarea{resize:vertical;min-height:70px;line-height:1.5}
+
+.opt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 16px}
+.opt{display:flex;align-items:center;gap:9px;font-family:var(--fm);font-size:0.84rem;text-transform:none;letter-spacing:0;color:var(--t2);cursor:pointer;padding:3px 0}
+.opt input{width:16px;height:16px;accent-color:var(--blue);flex-shrink:0;cursor:pointer}
+.opt:hover{color:var(--t1)}
+.grp-label{font-family:var(--fm);font-size:0.66rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--t2);margin-bottom:9px;display:block}
+
+/* SCOPE PACKAGES */
+#pkg-list{display:flex;flex-direction:column;gap:16px}
+.pkg{background:var(--navy);border:1px solid var(--border);border-radius:6px;border-left:3px solid var(--blue);overflow:hidden}
+.pkg.is-draft{border-left-color:var(--copper)}
+.pkg-hd{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(74,143,212,0.04);border-bottom:1px solid var(--border)}
+.pkg-tag{font-family:var(--fm);font-size:0.64rem;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:var(--t3)}
+.pkg-wt{margin-left:auto;font-family:var(--fm);font-size:0.82rem;font-weight:500;color:var(--blue-br);background:var(--field);border:1px solid var(--border);border-radius:3px;padding:3px 10px;white-space:nowrap}
+.pkg-rm{background:transparent;border:1px solid var(--border);color:var(--t3);font-family:var(--fm);font-size:0.7rem;border-radius:3px;padding:4px 9px;cursor:pointer;transition:all .15s;letter-spacing:0.06em}
+.pkg-rm:hover{border-color:var(--copper);color:var(--copper-lt)}
+.pkg-body{padding:16px}
+.add-pkg{display:inline-flex;align-items:center;gap:9px;background:transparent;border:1px dashed var(--bhi);color:var(--blue-br);font-family:var(--fm);font-size:0.82rem;font-weight:500;letter-spacing:0.06em;border-radius:6px;padding:11px 18px;cursor:pointer;transition:all .15s;margin-top:16px}
+.add-pkg:hover{background:rgba(74,143,212,0.08);border-style:solid}
+.add-pkg svg{width:16px;height:16px;stroke:currentColor}
+
+/* TITLE-BLOCK REVIEW */
+.titleblock{border:1px solid var(--bhi);border-radius:6px;background:var(--field);font-family:var(--fm);overflow:hidden}
+.tb-strip{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--navy);border-bottom:1px solid var(--border);font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--t3)}
+.tb-strip b{color:var(--copper-lt);font-weight:600}
+.tb-rows{display:grid;grid-template-columns:1fr 1fr}
+.tb-cell{padding:11px 16px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.tb-cell:nth-child(2n){border-right:none}
+.tb-k{font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--t3);margin-bottom:3px}
+.tb-v{font-size:0.88rem;color:var(--t1);word-break:break-word}
+.tb-v.dim{color:var(--t3)}
+.tb-deliv{padding:13px 16px}
+.tb-deliv .tb-k{margin-bottom:7px}
+.tb-chip{display:inline-block;font-size:0.72rem;color:var(--blue-br);border:1px solid var(--border);border-radius:3px;padding:3px 9px;margin:0 6px 6px 0}
+
+/* DXF UPLOAD */
+.dxf-upload-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn-dxf{background:transparent;border:1px solid var(--green);color:var(--green-br);font-family:var(--fm);font-weight:500;font-size:0.84rem;letter-spacing:0.06em;border-radius:6px;padding:10px 20px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:8px}
+.btn-dxf:hover{background:var(--green-dim);box-shadow:0 0 0 1px var(--green)}
+.btn-dxf svg{width:14px;height:14px;stroke:currentColor;flex-shrink:0}
+.dxf-hint{font-family:var(--fm);font-size:0.7rem;color:var(--t3);line-height:1.6}
+.dxf-preview{margin-top:16px}
+.dxf-preview .tb-strip .tb-rm{background:transparent;border:none;color:var(--t3);cursor:pointer;font-family:var(--fm);font-size:0.7rem;letter-spacing:0.06em;padding:0;transition:color .15s}
+.dxf-preview .tb-strip .tb-rm:hover{color:var(--copper-lt)}
+.dxf-preview .tb-v{color:var(--green-br)}
+.dxf-preview .tb-v.units{color:var(--blue-br)}
+.dxf-kad-note{font-family:var(--fm);font-size:0.7rem;color:var(--t3);margin-top:8px;line-height:1.6}
+.dxf-kad-note b{color:var(--blue-br);font-weight:500}
+.dxf-err{font-family:var(--fm);font-size:0.76rem;color:#f06060;margin-top:10px;background:rgba(240,96,96,0.06);border:1px solid rgba(240,96,96,0.2);border-radius:4px;padding:8px 12px;display:none}
+.dxf-err.show{display:block}
+
+/* SUBMIT */
+.submit-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.btn{font-family:var(--fm);font-weight:500;font-size:0.92rem;letter-spacing:0.04em;border-radius:6px;padding:13px 26px;cursor:pointer;border:1px solid transparent;transition:all .15s;display:inline-flex;align-items:center;gap:9px}
+.btn-primary{background:var(--copper);color:var(--void);font-weight:600}
+.btn-primary:hover{background:var(--copper-lt);box-shadow:0 4px 16px rgba(192,124,48,0.3)}
+.btn-ghost{background:transparent;border-color:var(--bhi);color:var(--blue-br)}
+.btn-ghost:hover{background:rgba(74,143,212,0.08)}
+.submit-note{font-family:var(--fm);font-size:0.7rem;color:var(--t3);flex-basis:100%;margin-top:2px}
+#success{display:none;border:1px solid var(--ok);border-radius:8px;background:rgba(63,174,122,0.07);padding:22px;margin-top:4px}
+#success h3{font-family:var(--fd);font-weight:700;font-size:1.15rem;color:var(--ok);margin-bottom:7px}
+#success p{font-family:var(--fm);font-size:0.86rem;color:var(--t2);line-height:1.7}
+
+footer{border-top:1px solid var(--border);background:var(--navy);padding:26px 24px;text-align:center;font-family:var(--fm);font-size:0.76rem;color:var(--t3);line-height:1.9;letter-spacing:0.03em}
+footer b{color:var(--t2);font-weight:500}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);border:1px solid var(--bhi);border-radius:6px;padding:12px 22px;font-family:var(--fm);font-size:0.84rem;color:var(--t1);box-shadow:0 8px 30px rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:all .3s;z-index:200}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:720px){
+  .grid,.grid-3,.opt-grid,.tb-rows{grid-template-columns:1fr}
+  .tb-cell{border-right:none}
+  .logo-name{font-size:1.7rem}.hd-right{text-align:left}
+  .to-inner{gap:13px}.to-num{font-size:1.2rem}.to-tier{margin-left:0}
+  main{margin-top:22px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+:focus-visible{outline:2px solid var(--blue-br);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd-inner">
+    <div>
+      <div class="logo-name">MOSAIC <span class="cu">IRON</span></div>
+      <div class="logo-sub">Steel · Fabrication · Drafting</div>
+    </div>
+    <div class="hd-right">
+      <span class="rfq-badge">Request for Quote</span>
+      <div class="hd-tag">Steel-focused, not steel-exclusive</div>
+    </div>
+  </div>
+</header>
+
+<!-- SIGNATURE: live takeoff — steel tonnage AND drawing sheets -->
+<div id="takeoff">
+  <div class="to-inner">
+    <div class="to-lead">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6"/></svg>
+      Project takeoff
+    </div>
+    <div class="to-metric"><span class="to-num" id="to-tons">0</span><span class="to-unit">tons steel</span></div>
+    <div class="to-sep"></div>
+    <div class="to-metric"><span class="to-num" id="to-sheets">0</span><span class="to-unit">sheets</span></div>
+    <div class="to-sep"></div>
+    <div class="to-metric"><span class="to-num" id="to-pkgs" style="font-size:1.05rem">0</span><span class="to-unit">scopes</span></div>
+    <span class="to-tier" id="to-tier">Awaiting scope</span>
+  </div>
+</div>
+
+<main>
+  <p class="intro">Tell us about the project — even a rough outline gets a fast, accurate quote.</p>
+
+  <!-- 01 — YOUR INFORMATION -->
+  <section class="card">
+    <div class="card-hd"><span class="card-no">01</span><span class="card-title">Your information</span></div>
+    <div class="card-body">
+      <div class="grid">
+        <label class="fld">Company / firm<span class="req">*</span><input id="c-company" type="text" placeholder="Western Builders, Inc."></label>
+        <label class="fld">Contact name<span class="req">*</span><input id="c-name" type="text" placeholder="Jordan Reyes"></label>
+        <label class="fld">Email<span class="req">*</span><input id="c-email" type="email" placeholder="jordan@westernbuilders.com"></label>
+        <label class="fld">Phone<input id="c-phone" type="tel" placeholder="(916) 555-0142"></label>
+        <label class="fld full">Your role
+          <select id="c-role">
+            <option value="">Select…</option>
+            <option>General contractor</option>
+            <option>Steel fabricator</option>
+            <option>Steel erector</option>
+            <option>Structural engineer (EOR)</option>
+            <option>MEP engineer</option>
+            <option>Architect</option>
+            <option>Owner / developer</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 — PROJECT OVERVIEW -->
+  <section class="card">
+    <div class="card-hd"><span class="card-no">02</span><span class="card-title">Project overview</span></div>
+    <div class="card-body">
+      <div class="grid">
+        <label class="fld">Project name<span class="req">*</span><input id="p-name" type="text" placeholder="Riverside Logistics — Building C"></label>
+        <label class="fld">Location (city, state)<input id="p-loc" type="text" placeholder="Sacramento, CA"></label>
+        <label class="fld">Project type
+          <select id="p-type">
+            <option value="">Select…</option>
+            <option>Commercial building</option>
+            <option>Industrial / plant</option>
+            <option>Institutional (school / hospital)</option>
+            <option>Mixed-use</option>
+            <option>Residential</option>
+            <option>Tenant improvement</option>
+            <option>Infrastructure / civil</option>
+            <option>Ornamental / feature work</option>
+            <option>Equipment / machinery</option>
+            <option>Renovation / retrofit</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label class="fld">Design documents status
+          <select id="p-dwg">
+            <option value="">Select…</option>
+            <option>Issued for construction</option>
+            <option>Issued for bid / permit</option>
+            <option>Preliminary / schematic</option>
+            <option>Not yet available</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 — SCOPE OF WORK (adaptive packages) -->
+  <section class="card">
+    <div class="card-hd"><span class="card-no">03</span><span class="card-title">Scope of work</span><span class="card-note">Add a scope per service, building,<br>area, or phase. The fields adapt.</span></div>
+    <div class="card-body">
+      <div id="pkg-list"></div>
+      <button type="button" class="add-pkg" onclick="addPackage()">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14"/></svg> Add scope
+      </button>
+    </div>
+  </section>
+
+  <!-- 04 — SOFTWARE / FORMAT / STANDARDS -->
+  <section class="card">
+    <div class="card-hd"><span class="card-no">04</span><span class="card-title">Software, format &amp; standards</span></div>
+    <div class="card-body">
+      <div class="grid" style="margin-bottom:18px">
+        <label class="fld">Preferred platform
+          <select id="s-platform">
+            <option value="">No preference — Mosaic Iron's choice</option>
+            <option>Tekla Structures</option>
+            <option>SDS2</option>
+            <option>Advance Steel</option>
+            <option>Revit</option>
+            <option>AutoCAD</option>
+            <option>Navisworks</option>
+          </select>
+        </label>
+        <label class="fld">Codes / standards<input id="s-code" type="text" placeholder="AISC 360 · AWS D1.1 · IBC · NEC · IPC"></label>
+      </div>
+      <div class="grid">
+        <div>
+          <span class="grp-label">Deliverable formats</span>
+          <div class="opt-grid">
+            <label class="opt"><input type="checkbox" id="fmt-pdf"> PDF</label>
+            <label class="opt"><input type="checkbox" id="fmt-dwg"> DWG</label>
+            <label class="opt"><input type="checkbox" id="fmt-dxf"> DXF</label>
+            <label class="opt"><input type="checkbox" id="fmt-ifc"> IFC</label>
+            <label class="opt"><input type="checkbox" id="fmt-nc"> NC1 / DSTV</label>
+            <label class="opt"><input type="checkbox" id="fmt-rvt"> Revit (RVT)</label>
+            <label class="opt"><input type="checkbox" id="fmt-nwc"> Navisworks (NWC)</label>
+            <label class="opt"><input type="checkbox" id="fmt-model"> Native model</label>
+          </div>
+        </div>
+        <div>
+          <span class="grp-label">Documents you can provide</span>
+          <div class="opt-grid">
+            <label class="opt"><input type="checkbox" id="doc-struct"> Structural drawings</label>
+            <label class="opt"><input type="checkbox" id="doc-arch"> Architectural</label>
+            <label class="opt"><input type="checkbox" id="doc-mep"> MEP backgrounds</label>
+            <label class="opt"><input type="checkbox" id="doc-spec"> Project specs</label>
+            <label class="opt"><input type="checkbox" id="doc-calc"> Engineering calcs</label>
+            <label class="opt"><input type="checkbox" id="doc-bim"> BIM model</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 — SCHEDULE & SUBMISSION -->
+  <section class="card">
+    <div class="card-hd"><span class="card-no">05</span><span class="card-title">Schedule &amp; submission</span></div>
+    <div class="card-body">
+      <div class="grid-3" style="margin-bottom:18px">
+        <label class="fld">Quote needed by<input id="t-quote" type="date"></label>
+        <label class="fld">Deliverables / approval by<input id="t-appr" type="date"></label>
+        <label class="fld">Fabrication / start<input id="t-fab" type="date"></label>
+      </div>
+      <div class="grid">
+        <div>
+          <span class="grp-label">Pricing requested</span>
+          <div class="opt-grid" style="grid-template-columns:1fr 1fr">
+            <label class="opt"><input type="radio" name="pricing" value="Budget / ROM" checked> Budget / ROM</label>
+            <label class="opt"><input type="radio" name="pricing" value="Firm bid"> Firm bid</label>
+          </div>
+        </div>
+        <div>
+          <span class="grp-label">Project flags</span>
+          <div class="opt-grid">
+            <label class="opt"><input type="checkbox" id="flg-fast"> Fast-track / phased</label>
+            <label class="opt"><input type="checkbox" id="flg-galv"> Galvanized</label>
+            <label class="opt"><input type="checkbox" id="flg-paint"> Painted / coated</label>
+            <label class="opt"><input type="checkbox" id="flg-field"> Field work / install</label>
+            <label class="opt"><input type="checkbox" id="flg-seis"> Seismic / high-wind</label>
+            <label class="opt"><input type="checkbox" id="flg-nda"> NDA required</label>
+          </div>
+        </div>
+        <label class="fld full" style="margin-top:4px">Anything else we should know
+          <textarea id="t-notes" placeholder="Scope clarifications, known conditions, coordination needs, prior phases, site constraints…"></textarea>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 — REFERENCE GEOMETRY (optional DXF → .kad) -->
+  <section class="card">
+    <div class="card-hd">
+      <span class="card-no">06</span>
+      <span class="card-title">Reference geometry</span>
+      <span class="card-note">Optional · DXF attached as <b style="color:var(--blue-br);font-weight:500">.kad</b><br>openable directly in KADsuite</span>
+    </div>
+    <div class="card-body">
+      <p class="intro" style="margin-bottom:16px">
+        Have a DXF of the part, plate, or profile? Attach it here. It's converted to a
+        <b>.kad</b> file and arrives with your request so we can open it straight in our
+        drafting tools — no back-and-forth needed.
+      </p>
+      <div class="dxf-upload-row">
+        <button type="button" class="btn-dxf" onclick="document.getElementById('load-dxf').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Attach .dxf file
+        </button>
+        <input type="file" id="load-dxf" accept=".dxf,.DXF" style="display:none" onchange="handleDXFUpload(event)">
+        <span class="dxf-hint">Accepts ASCII DXF · LINE, ARC, CIRCLE, LWPOLYLINE, POLYLINE<br>$INSUNITS read automatically — inches and mm both work</span>
+      </div>
+
+      <!-- Error display -->
+      <div class="dxf-err" id="dxf-err"></div>
+
+      <!-- Preview — shown after successful parse -->
+      <div class="dxf-preview" id="dxf-preview" style="display:none">
+        <div class="titleblock" style="max-width:520px">
+          <div class="tb-strip">
+            <span>KAD geometry — <b id="dxf-fname">—</b></span>
+            <button type="button" class="tb-rm" onclick="clearDXF()">✕ Remove</button>
+          </div>
+          <div class="tb-rows">
+            <div class="tb-cell">
+              <div class="tb-k">Lines / segments</div>
+              <div class="tb-v" id="dxf-lines">—</div>
+            </div>
+            <div class="tb-cell">
+              <div class="tb-k">Arcs</div>
+              <div class="tb-v" id="dxf-arcs">—</div>
+            </div>
+            <div class="tb-cell">
+              <div class="tb-k">Circles</div>
+              <div class="tb-v" id="dxf-circles">—</div>
+            </div>
+            <div class="tb-cell">
+              <div class="tb-k">Units ($INSUNITS)</div>
+              <div class="tb-v units" id="dxf-units">—</div>
+            </div>
+          </div>
+        </div>
+        <p class="dxf-kad-note">
+          Geometry will arrive as <b>project.kad</b> — openable in KADsuite or the embedded KAD
+          on the Mosaic Iron site. Native ARC and CIRCLE types preserved (not tessellated).
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEW -->
+  <section>
+    <span class="grp-label" style="margin-bottom:10px">Review</span>
+    <div class="titleblock">
+      <div class="tb-strip"><span>Mosaic Iron · <b>Project RFQ</b></span><span id="tb-date">—</span></div>
+      <div class="tb-rows">
+        <div class="tb-cell"><div class="tb-k">Project</div><div class="tb-v dim" id="tb-proj">—</div></div>
+        <div class="tb-cell"><div class="tb-k">Client / firm</div><div class="tb-v dim" id="tb-client">—</div></div>
+        <div class="tb-cell"><div class="tb-k">Contact</div><div class="tb-v dim" id="tb-contact">—</div></div>
+        <div class="tb-cell"><div class="tb-k">Location · type</div><div class="tb-v dim" id="tb-loc">—</div></div>
+        <div class="tb-cell"><div class="tb-k">Scope</div><div class="tb-v dim" id="tb-scope">—</div></div>
+        <div class="tb-cell"><div class="tb-k">Quote needed · pricing</div><div class="tb-v dim" id="tb-sched">—</div></div>
+      </div>
+      <div class="tb-deliv"><div class="tb-k">Services &amp; deliverables</div><div id="tb-deliv"><span class="tb-v dim">—</span></div></div>
+    </div>
+  </section>
+
+  <div class="submit-row">
+    <button type="button" class="btn btn-primary" onclick="submitRFQ()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      Send request
+    </button>
+    <button type="button" class="btn btn-ghost" onclick="copyRFQ()">Copy request text</button>
+    <div class="submit-note">Sends to mosaiciron@gmail.com. If a .dxf was attached, it arrives as a project.kad attachment. We reply within one business day.</div>
+  </div>
+
+  <div id="success">
+    <h3>Request on its way</h3>
+    <p id="success-msg"></p>
+  </div>
+</main>
+
+<footer>
+  <b>MOSAIC IRON</b> — Steel Detailing · Fabrication · Welding · MEP &amp; Construction Drafting &nbsp;·&nbsp; California<br>
+  <a href="tel:5308026493">530.802.6493</a> &nbsp;·&nbsp; <a href="mailto:mosaiciron@gmail.com">mosaiciron@gmail.com</a> &nbsp;·&nbsp; Shalom Marsjones, Principal
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   VERCEL ENDPOINT — set after deploying the serverless function.
+   See VERCEL_SETUP.md for deployment instructions.
+
+   Format: https://your-project-name.vercel.app/api/submit-rfq
+   Example: https://mosaic-iron.vercel.app/api/submit-rfq
+
+   The function receives form data + .kad JSON and emails it with the
+   .kad attached. Leave blank during setup to test the form locally.
+   ════════════════════════════════════════════════════════════════════ */
+const RFQ_ENDPOINT = '';  // Fill this in after Vercel deployment
+const RFQ_EMAIL    = 'mosaiciron@gmail.com';
+
+/* ── Work types — each drives the package's metric + deliverables ── */
+const WORK_TYPES = {
+  'steel-detailing':{ label:'Steel detailing', metric:'tons',
+    deliverables:['Shop / fabrication drawings','Erection drawings','Connection design (delegated)','Anchor-rod & embed plans','Advanced bill of material','CNC / DSTV (NC1) files','3D model (IFC / native)'] },
+  'fabrication':{ label:'Metal fabrication', metric:'tons',
+    deliverables:['Fabrication drawings','Cut lists / BOM','CNC / NC files','Welded assemblies','Finishing / coating','Galvanizing','Delivery / kitting'] },
+  'welding':{ label:'Welding (shop & field)', metric:'tons',
+    deliverables:['Shop welding','Field welding','Structural connections','Repairs / retrofit','Custom assemblies','Weld procedures (WPS)','NDT / inspection support'] },
+  'arch-steel':{ label:'Architectural / ornamental steel', metric:'tons',
+    deliverables:['Design / shop drawings','Stairs','Railings / guards','Canopies / sunshades','Feature / ornamental','Finishes / AESS','Installation drawings'] },
+  'mep-drafting':{ label:'MEP drafting', metric:'sheets',
+    deliverables:['Mechanical / HVAC','Electrical / power','Plumbing','Fire protection','Coordination / clash','Revit / BIM model','As-builts'] },
+  'construction-drafting':{ label:'Construction drafting', metric:'sheets',
+    deliverables:['Permit / construction set','Shop drawings','As-built drawings','Redline / markup cleanup','CAD conversion','Detail sheets','Site / civil'] }
+};
+const TYPE_ORDER = ['steel-detailing','fabrication','welding','arch-steel','mep-drafting','construction-drafting'];
+
+let pkgSeq = 0;
+
+function addPackage(){
+  const id = ++pkgSeq;
+  const wrap = document.createElement('div');
+  wrap.className = 'pkg';
+  wrap.id = 'pkg-'+id;
+  const typeOpts = TYPE_ORDER.map(k=>`<option value="${k}">${WORK_TYPES[k].label}</option>`).join('');
+  wrap.innerHTML = `
+    <div class="pkg-hd">
+      <span class="pkg-tag">Scope ${id}</span>
+      <span class="pkg-wt" id="pkg-${id}-wt">~ —</span>
+      <button type="button" class="pkg-rm" onclick="removePackage(${id})">Remove</button>
+    </div>
+    <div class="pkg-body">
+      <div class="grid" style="margin-bottom:14px">
+        <label class="fld">Service / work type
+          <select id="pkg-${id}-type" onchange="onTypeChange(${id})">${typeOpts}</select>
+        </label>
+        <label class="fld">Scope / area name<span class="req">*</span>
+          <input type="text" id="pkg-${id}-name" placeholder="Building C frame · Egress stairs · MEP Level 2">
+        </label>
+      </div>
+      <div id="pkg-${id}-dyn"></div>
+      <label class="fld full" style="margin-top:14px">Scope notes
+        <textarea id="pkg-${id}-notes" placeholder="Known conditions, repetitive bays, connection types, sheet breakdown, sequencing…"></textarea>
+      </label>
+    </div>`;
+  document.getElementById('pkg-list').appendChild(wrap);
+  onTypeChange(id);
+}
+
+function onTypeChange(id){
+  const type = document.getElementById(`pkg-${id}-type`).value;
+  const def  = WORK_TYPES[type] || WORK_TYPES['steel-detailing'];
+  const isTons = def.metric === 'tons';
+  const metricLabel = isTons ? 'Est. tonnage' : 'Est. drawings';
+  const unit = def.metric;
+
+  const oldEl = document.getElementById(`pkg-${id}-qty`);
+  const oldQty = oldEl ? oldEl.value : '';
+  const oldUnit = oldEl ? oldEl.dataset.unit : '';
+
+  const deliv = def.deliverables.map(d=>
+    `<label class="opt"><input type="checkbox" class="pkg-del" data-label="${d}" onchange="updateTakeoff()"> ${d}</label>`
+  ).join('');
+
+  document.getElementById(`pkg-${id}-dyn`).innerHTML = `
+    <label class="fld" style="max-width:240px;margin-bottom:14px">${metricLabel} (${unit})
+      <input type="number" min="0" step="any" id="pkg-${id}-qty" data-unit="${unit}" placeholder="0" oninput="updateTakeoff()">
+    </label>
+    <span class="grp-label">Deliverables</span>
+    <div class="opt-grid">${deliv}</div>`;
+
+  const newEl = document.getElementById(`pkg-${id}-qty`);
+  if(newEl && oldUnit === unit) newEl.value = oldQty;
+
+  const card = document.getElementById('pkg-'+id);
+  if(card) card.classList.toggle('is-draft', !isTons);
+  updateTakeoff();
+}
+
+function removePackage(id){
+  const el = document.getElementById('pkg-'+id);
+  if(el) el.remove();
+  if(!document.querySelectorAll('.pkg').length) addPackage();
+  updateTakeoff();
+}
+
+/* ── Collect ── */
+function collectPackages(){
+  const out = [];
+  document.querySelectorAll('.pkg').forEach(p=>{
+    const id = p.id.split('-')[1];
+    const type = document.getElementById(`pkg-${id}-type`)?.value || '';
+    const def  = WORK_TYPES[type] || {};
+    const qtyEl = document.getElementById(`pkg-${id}-qty`);
+    const qty = parseFloat(qtyEl?.value) || 0;
+    const unit = qtyEl?.dataset.unit || '';
+    const deliv = [...p.querySelectorAll('.pkg-del')].filter(c=>c.checked).map(c=>c.dataset.label);
+    out.push({
+      name: document.getElementById(`pkg-${id}-name`)?.value.trim() || `Scope ${id}`,
+      service: def.label || '—',
+      qty, unit, deliv,
+      notes: document.getElementById(`pkg-${id}-notes`)?.value.trim() || ''
+    });
+  });
+  return out;
+}
+
+/* ── SIGNATURE: dual takeoff ── */
+function tier(tons, sheets){
+  const t = tons + sheets/4;
+  if(t<=0)  return {label:'Awaiting scope', cls:''};
+  if(t<25)  return {label:'Light scope',    cls:'t-on'};
+  if(t<100) return {label:'Standard scope', cls:'t-on'};
+  if(t<300) return {label:'Heavy scope',    cls:'t-heavy'};
+  return           {label:'Major scope',    cls:'t-heavy'};
+}
+function fmtNum(n){ return (Math.round(n*10)/10).toLocaleString('en-US'); }
+
+function updateTakeoff(){
+  let tons=0, sheets=0, n=0;
+  document.querySelectorAll('.pkg').forEach(p=>{
+    const id = p.id.split('-')[1];
+    const qtyEl = document.getElementById(`pkg-${id}-qty`);
+    const qty = parseFloat(qtyEl?.value) || 0;
+    const unit = qtyEl?.dataset.unit || '';
+    const pill = document.getElementById(`pkg-${id}-wt`);
+    if(pill) pill.textContent = qty>0 ? `~ ${fmtNum(qty)} ${unit}` : '~ —';
+    if(qty>0){ if(unit==='tons') tons+=qty; else if(unit==='sheets') sheets+=qty; }
+    n++;
+  });
+  const tn = document.getElementById('to-tons');
+  tn.textContent = tons>0 ? fmtNum(tons) : '0';
+  tn.className = 'to-num' + (tons>0 ? ' on' : '');
+  const sh = document.getElementById('to-sheets');
+  sh.textContent = sheets>0 ? fmtNum(sheets) : '0';
+  sh.className = 'to-num' + (sheets>0 ? ' on-blue' : '');
+  document.getElementById('to-pkgs').textContent = n;
+  const tb = document.getElementById('to-tier');
+  const tr = tier(tons, sheets);
+  tb.textContent = tr.label;
+  tb.className = 'to-tier ' + tr.cls;
+  updateReview();
+}
+
+/* ── Live title-block review ── */
+function val(id){ return document.getElementById(id)?.value.trim() || ''; }
+function setCell(id, text){ const el=document.getElementById(id); el.textContent=text||'—'; el.classList.toggle('dim',!text); }
+function fmtDate(id){ const v=val(id); return v?new Date(v+'T00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''; }
+
+function updateReview(){
+  document.getElementById('tb-date').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  setCell('tb-proj', val('p-name'));
+  setCell('tb-client', val('c-company'));
+  setCell('tb-contact', [val('c-name'),val('c-email')].filter(Boolean).join(' · '));
+  setCell('tb-loc', [val('p-loc'),val('p-type')].filter(Boolean).join(' · '));
+
+  const pkgs = collectPackages();
+  let tons=0, sheets=0;
+  pkgs.forEach(p=>{ if(p.unit==='tons') tons+=p.qty; else if(p.unit==='sheets') sheets+=p.qty; });
+  const scopeBits = [];
+  if(tons>0)   scopeBits.push(`${fmtNum(tons)} tons`);
+  if(sheets>0) scopeBits.push(`${fmtNum(sheets)} sheets`);
+  scopeBits.push(`${pkgs.length} scope${pkgs.length!==1?'s':''}`);
+  setCell('tb-scope', scopeBits.join(' · '));
+
+  const pricing = document.querySelector('input[name="pricing"]:checked')?.value || '';
+  setCell('tb-sched', [fmtDate('t-quote'), pricing].filter(Boolean).join(' · '));
+
+  const services = [...new Set(pkgs.map(p=>p.service).filter(s=>s&&s!=='—'))];
+  const deliv = new Set(); pkgs.forEach(p=>p.deliv.forEach(d=>deliv.add(d)));
+  const dv = document.getElementById('tb-deliv');
+  const chips = [...services.map(s=>`<span class="tb-chip" style="border-color:var(--copper);color:var(--copper-lt)">${s}</span>`),
+                 ...[...deliv].map(d=>`<span class="tb-chip">${d}</span>`)];
+  dv.innerHTML = chips.length ? chips.join('') : '<span class="tb-v dim">—</span>';
+}
+
+/* ── Build plain-text RFQ ── */
+function checks(map){ return Object.entries(map).filter(([id])=>document.getElementById(id)?.checked).map(([,l])=>l); }
+function bar(c){ return c.repeat(56); }
+
+function buildRFQText(){
+  const pkgs = collectPackages();
+  let tons=0, sheets=0;
+  pkgs.forEach(p=>{ if(p.unit==='tons') tons+=p.qty; else if(p.unit==='sheets') sheets+=p.qty; });
+
+  const fmts = checks({'fmt-pdf':'PDF','fmt-dwg':'DWG','fmt-dxf':'DXF','fmt-ifc':'IFC','fmt-nc':'NC1/DSTV','fmt-rvt':'Revit','fmt-nwc':'Navisworks','fmt-model':'Native model'});
+  const docs = checks({'doc-struct':'Structural drawings','doc-arch':'Architectural','doc-mep':'MEP backgrounds','doc-spec':'Specs','doc-calc':'Eng calcs','doc-bim':'BIM model'});
+  const flags= checks({'flg-fast':'Fast-track/phased','flg-galv':'Galvanized','flg-paint':'Painted/coated','flg-field':'Field work/install','flg-seis':'Seismic/high-wind','flg-nda':'NDA required'});
+
+  const pkgLines = pkgs.map((p,i)=>
+`  ${i+1}. ${p.name}  [${p.service}]
+     Quantity:     ${p.qty>0?fmtNum(p.qty)+' '+p.unit:'—'}
+     Deliverables: ${p.deliv.length?p.deliv.join(', '):'—'}
+     Notes:        ${p.notes||'None'}`).join('\n\n');
+
+  const totals = [tons>0?fmtNum(tons)+' tons steel':'', sheets>0?fmtNum(sheets)+' drawing sheets':''].filter(Boolean).join('  ·  ') || '—';
+
+  const dxfLine = _dxfKadFilename
+    ? `  Geometry:   ${_dxfKadFilename} → project.kad (attached)`
+    : '  Geometry:   None attached';
+
+  return `REQUEST FOR QUOTE — MOSAIC IRON
+Steel · Fabrication · Welding · MEP & Construction Drafting
+${bar('=')}
+
+SUBMITTED: ${new Date().toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'})}
+
+CONTACT
+  Company:    ${val('c-company')||'—'}
+  Contact:    ${val('c-name')||'—'}
+  Email:      ${val('c-email')||'—'}
+  Phone:      ${val('c-phone')||'—'}
+  Role:       ${val('c-role')||'—'}
+
+PROJECT
+  Name:       ${val('p-name')||'—'}
+  Location:   ${val('p-loc')||'—'}
+  Type:       ${val('p-type')||'—'}
+  Dwg status: ${val('p-dwg')||'—'}
+
+SCOPE OF WORK (${pkgs.length} scope${pkgs.length!==1?'s':''})
+${bar('-')}
+${pkgLines}
+
+${bar('-')}
+PROJECT TOTAL: ${totals}   ·   SCOPE: ${tier(tons,sheets).label}
+${bar('-')}
+
+SOFTWARE / FORMAT / STANDARDS
+  Platform:   ${val('s-platform')||"No preference (Mosaic Iron's choice)"}
+  Codes:      ${val('s-code')||'—'}
+  Formats:    ${fmts.length?fmts.join(', '):'—'}
+  Docs avail: ${docs.length?docs.join(', '):'—'}
+
+SCHEDULE & SUBMISSION
+  Quote by:   ${fmtDate('t-quote')||'Flexible'}
+  Deliver by: ${fmtDate('t-appr')||'TBD'}
+  Start:      ${fmtDate('t-fab')||'TBD'}
+  Pricing:    ${document.querySelector('input[name="pricing"]:checked')?.value||'—'}
+  Flags:      ${flags.length?flags.join(', '):'None'}
+  Notes:      ${val('t-notes')||'None'}
+
+REFERENCE GEOMETRY
+${dxfLine}
+
+${bar('=')}
+Reply to ${val('c-email')||'the contact above'} with scope confirmation and pricing.
+Thank you — Mosaic Iron.`;
+}
+
+/* ── Validation ── */
+function validate(){
+  const miss = [];
+  if(!val('c-company')) miss.push('Company');
+  if(!val('c-name'))    miss.push('Contact name');
+  if(!val('c-email'))   miss.push('Email');
+  if(!val('p-name'))    miss.push('Project name');
+  const ok = collectPackages().some(p=>p.qty>0 || p.deliv.length);
+  if(!ok) miss.push('at least one scope with a quantity or deliverable');
+  return miss;
+}
+
+/* ── Submit ── */
+function submitRFQ(){
+  const miss = validate();
+  if(miss.length){ toast('Add: ' + miss.join(', ')); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  updateReview();
+  const text = buildRFQText();
+  const subject = `RFQ — ${val('p-name')} — ${val('c-company')} — ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
+  if(RFQ_ENDPOINT){
+    // Prefer uploaded DXF (converted to .kad), then fall back to embedded KAD sketch
+    let kadJson = null;
+    if(_dxfKadJson){
+      kadJson = _dxfKadJson;
+    } else if(typeof serializeDrawing === 'function'){
+      try { kadJson = JSON.stringify(serializeDrawing()); } catch(e){}
+    }
+
+    const payload = {
+      subject: subject,
+      rfq_text: text,
+      kad_json: kadJson,
+      reply_to: val('c-email')
+    };
+
+    fetch(RFQ_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    })
+      .then(r=>r.json())
+      .then(d=>{ if(d.success) showSuccess('email'); else toast('Submit failed: '+(d.error||'unknown error')); })
+      .catch(err=>{ toast('Network error: '+err.message); });
+  } else {
+    toast('RFQ_ENDPOINT not configured — see VERCEL_SETUP.md.');
+  }
+}
+function showSuccess(mode){
+  document.getElementById('success-msg').textContent = mode==='email'
+    ? 'Your request was sent to Mosaic Iron, with a reply-to copy to your inbox. We'll be in touch within a business day.'
+    : 'Your email program should now be open with the full request filled in — just hit send. If nothing opened, use "Copy request text" and email it to ' + RFQ_EMAIL + '.';
+  const s = document.getElementById('success'); s.style.display='block';
+  s.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function copyRFQ(){
+  const miss = validate();
+  if(miss.includes('Company')||miss.includes('Project name')){ toast('Add a company and project name first'); return; }
+  updateReview();
+  const text = buildRFQText();
+  const done = ()=>toast('Request text copied — paste into an email to ' + RFQ_EMAIL);
+  if(navigator.clipboard?.writeText){ navigator.clipboard.writeText(text).then(done).catch(()=>legacyCopy(text,done)); }
+  else legacyCopy(text, done);
+}
+function legacyCopy(text, done){
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){ toast('Copy failed — select the text manually'); }
+  document.body.removeChild(ta);
+}
+
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3400);
+}
+
+document.addEventListener('input', e=>{ if(e.target.closest('main')) updateReview(); });
+document.addEventListener('change', e=>{ if(e.target.closest('main')) updateReview(); });
+
+/* ════════════════════════════════════════════════════════════════════
+   DXF → .KAD CONVERTER
+   parseDXF ported from KADsuite (Mosaic_Iron.html).
+   Handles: LINE, ARC, CIRCLE, LWPOLYLINE, POLYLINE/VERTEX.
+   Reads $INSUNITS from HEADER for automatic unit scaling.
+   Produces native .kad JSON — ARC and CIRCLE are preserved as first-
+   class entities (not tessellated), matching GeoMemory's schema.
+   ════════════════════════════════════════════════════════════════════ */
+
+const DXF_INSUNITS_TO_MM = {
+  0:  1,          // Unitless — assume mm
+  1:  25.4,       // Inches
+  2:  304.8,      // Feet
+  3:  1609344,    // Miles
+  4:  1,          // Millimeters
+  5:  10,         // Centimeters
+  6:  1000,       // Meters
+  7:  1e6,        // Kilometers
+  8:  25.4/1000,  // Microinches
+  9:  0.0254,     // Mils
+  10: 914.4,      // Yards
+  11: 1e-7,       // Angstroms
+  12: 1e-6,       // Nanometers
+  13: 1e-3,       // Microns
+  14: 100,        // Decimeters
+  15: 10000,      // Decameters
+  16: 100000,     // Hectometers
+  17: 1e9,        // Gigameters
+  18: 1.496e14,   // Astronomical units
+  19: 9.461e18,   // Light years
+  20: 3.086e19,   // Parsecs
+};
+
+// Tokenise DXF text into [groupCode, value] pairs, then parse entities.
+// Returns { lines, circles, arcs, polylines, rawInsUnits, error? }
+// All coordinates are RAW — caller applies scale.
+function parseDXF(text) {
+  const rawLines = text.split(/\r?\n/);
+  const tokens = [];
+  for(let i = 0; i + 1 < rawLines.length; i += 2){
+    const code = parseInt(rawLines[i].trim(), 10);
+    const v    = rawLines[i+1].trim();
+    if(!isNaN(code)) tokens.push([code, v]);
+  }
+
+  // Read $INSUNITS from HEADER
+  let rawInsUnits = 0;
+  let inHeader = false, nextIsInsUnits = false;
+  for(const [code, v] of tokens){
+    if(code===2  && v==='HEADER')    { inHeader=true; continue; }
+    if(code===0  && v==='ENDSEC')    { if(inHeader){ inHeader=false; break; } }
+    if(!inHeader) continue;
+    if(code===9  && v==='$INSUNITS') { nextIsInsUnits=true; continue; }
+    if(nextIsInsUnits && code===70)  { rawInsUnits=parseInt(v,10); nextIsInsUnits=false; }
+  }
+
+  // Find ENTITIES section
+  let entStart = -1;
+  for(let i=0; i<tokens.length; i++){
+    if(tokens[i][0]===2 && tokens[i][1]==='ENTITIES'){ entStart=i+1; break; }
+  }
+  if(entStart<0) return { lines:[], circles:[], arcs:[], polylines:[], rawInsUnits, error:'No ENTITIES section found' };
+
+  const lines=[], circles=[], arcs=[], polylines=[];
+  let i = entStart;
+
+  while(i < tokens.length){
+    const [code, v] = tokens[i];
+    if(code===0 && (v==='ENDSEC'||v==='EOF')) break;
+
+    // LINE
+    if(code===0 && v==='LINE'){
+      let layer='Layer_0', x1=0,y1=0,x2=0,y2=0;
+      i++;
+      while(i<tokens.length && tokens[i][0]!==0){
+        const [c,t]=tokens[i];
+        if(c===8)  layer=t;
+        if(c===10) x1=parseFloat(t);
+        if(c===20) y1=parseFloat(t);
+        if(c===11) x2=parseFloat(t);
+        if(c===21) y2=parseFloat(t);
+        i++;
+      }
+      lines.push({layer,x1,y1,x2,y2});
+      continue;
+    }
+
+    // CIRCLE
+    if(code===0 && v==='CIRCLE'){
+      let layer='Layer_0', cx=0,cy=0,r=1;
+      i++;
+      while(i<tokens.length && tokens[i][0]!==0){
+        const [c,t]=tokens[i];
+        if(c===8)  layer=t;
+        if(c===10) cx=parseFloat(t);
+        if(c===20) cy=parseFloat(t);
+        if(c===40) r =parseFloat(t);
+        i++;
+      }
+      circles.push({layer,cx,cy,r});
+      continue;
+    }
+
+    // ARC (DXF: degrees CCW, start→end)
+    if(code===0 && v==='ARC'){
+      let layer='Layer_0', cx=0,cy=0,r=1,startA=0,endA=360;
+      i++;
+      while(i<tokens.length && tokens[i][0]!==0){
+        const [c,t]=tokens[i];
+        if(c===8)  layer =t;
+        if(c===10) cx    =parseFloat(t);
+        if(c===20) cy    =parseFloat(t);
+        if(c===40) r     =parseFloat(t);
+        if(c===50) startA=parseFloat(t);
+        if(c===51) endA  =parseFloat(t);
+        i++;
+      }
+      arcs.push({layer,cx,cy,r,startA,endA});
+      continue;
+    }
+
+    // LWPOLYLINE — preserve as polyline, not exploded to lines
+    if(code===0 && v==='LWPOLYLINE'){
+      let layer='Layer_0', closed=false;
+      const verts=[];
+      i++;
+      while(i<tokens.length && tokens[i][0]!==0){
+        const [c,t]=tokens[i];
+        if(c===8)  layer =t;
+        if(c===70) closed=!!(parseInt(t,10)&1);
+        if(c===10) verts.push({x:parseFloat(t),y:0});
+        if(c===20 && verts.length) verts[verts.length-1].y=parseFloat(t);
+        i++;
+      }
+      if(verts.length>=2) polylines.push({layer,closed,pts:verts});
+      continue;
+    }
+
+    // POLYLINE + VERTEX (classic format)
+    if(code===0 && v==='POLYLINE'){
+      let layer='Layer_0', closed=false;
+      i++;
+      while(i<tokens.length && tokens[i][0]!==0){
+        const [c,t]=tokens[i];
+        if(c===8)  layer =t;
+        if(c===70) closed=!!(parseInt(t,10)&1);
+        i++;
+      }
+      const verts=[];
+      while(i<tokens.length){
+        if(tokens[i][0]===0 && tokens[i][1]==='SEQEND'){ i++; break; }
+        if(tokens[i][0]===0 && tokens[i][1]==='VERTEX'){
+          let vx=0,vy=0; i++;
+          while(i<tokens.length && tokens[i][0]!==0){
+            const [c,t]=tokens[i];
+            if(c===10) vx=parseFloat(t);
+            if(c===20) vy=parseFloat(t);
+            i++;
+          }
+          verts.push({x:vx,y:vy});
+          continue;
+        }
+        i++;
+      }
+      if(verts.length>=2) polylines.push({layer,closed,pts:verts});
+      continue;
+    }
+
+    i++;
+  }
+
+  return {lines, circles, arcs, polylines, rawInsUnits};
+}
+
+// Convert parseDXF output to a .kad JSON string.
+// Scale is derived from $INSUNITS; all output coordinates are in mm.
+// ARC angles: DXF uses degrees; .kad uses radians. Both CCW.
+function dxfToKad(text){
+  const parsed = parseDXF(text);
+  if(parsed.error) throw new Error(parsed.error);
+
+  const S = DXF_INSUNITS_TO_MM[parsed.rawInsUnits] ?? 1;
+  const f = (n, digits=6) => parseFloat((n*S).toFixed(digits));
+  const objects=[];
+  let nextId=1;
+
+  for(const ln of parsed.lines){
+    objects.push({id:nextId++, type:'LINE', layer:ln.layer||'Layer_0',
+      x1:f(ln.x1), y1:f(ln.y1), x2:f(ln.x2), y2:f(ln.y2)});
+  }
+  for(const c of parsed.circles){
+    objects.push({id:nextId++, type:'CIRCLE', layer:c.layer||'Layer_0',
+      cx:f(c.cx), cy:f(c.cy), r:f(c.r)});
+  }
+  for(const a of parsed.arcs){
+    // DXF degrees CCW → KAD radians CCW
+    objects.push({id:nextId++, type:'ARC', layer:a.layer||'Layer_0',
+      cx:f(a.cx), cy:f(a.cy), r:f(a.r),
+      startA:parseFloat((a.startA*Math.PI/180).toFixed(8)),
+      endA:  parseFloat((a.endA  *Math.PI/180).toFixed(8)),
+      ccw:   true});
+  }
+  for(const pl of parsed.polylines){
+    objects.push({id:nextId++, type:'POLYLINE', layer:pl.layer||'Layer_0',
+      closed:pl.closed,
+      pts:pl.pts.map(p=>({x:f(p.x), y:f(p.y)}))});
+  }
+
+  // Human-readable unit label for the preview
+  const scaleLabel = S===25.4 ? `inches → mm (×25.4, $INSUNITS=${parsed.rawInsUnits})`
+                   : S===1    ? `mm ($INSUNITS=${parsed.rawInsUnits})`
+                              : `×${S} ($INSUNITS=${parsed.rawInsUnits})`;
+
+  return {
+    kad: JSON.stringify({version:'0.0', units:'mm', displayUnits:'mm', nextId, objects}, null, 2),
+    stats:{
+      lines:    parsed.lines.length,
+      arcs:     parsed.arcs.length,
+      circles:  parsed.circles.length,
+      polylines:parsed.polylines.length,
+      total:    parsed.lines.length + parsed.arcs.length + parsed.circles.length + parsed.polylines.length,
+      units:    scaleLabel,
+    }
+  };
+}
+
+/* ── DXF upload state ── */
+let _dxfKadJson      = null;  // converted .kad JSON string, or null
+let _dxfKadFilename  = '';    // original .dxf filename for display
+
+function handleDXFUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const errEl = document.getElementById('dxf-err');
+  errEl.classList.remove('show');
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const result = dxfToKad(e.target.result);
+      if(result.stats.total === 0){
+        showDxfError('No supported geometry found. Ensure the DXF contains LINE, ARC, CIRCLE, or LWPOLYLINE entities.');
+        event.target.value='';
+        return;
+      }
+      _dxfKadJson     = result.kad;
+      _dxfKadFilename = file.name;
+
+      // Populate preview
+      document.getElementById('dxf-preview').style.display = 'block';
+      document.getElementById('dxf-fname').textContent    = file.name;
+      document.getElementById('dxf-lines').textContent    = result.stats.lines
+        + (result.stats.polylines ? ` + ${result.stats.polylines} polylines` : '');
+      document.getElementById('dxf-arcs').textContent     = result.stats.arcs;
+      document.getElementById('dxf-circles').textContent  = result.stats.circles;
+      document.getElementById('dxf-units').textContent    = result.stats.units;
+
+      toast(`DXF loaded · ${result.stats.total} entities · will attach as project.kad`);
+    } catch(err){
+      showDxfError('Parse error: ' + err.message);
+      event.target.value='';
+    }
+  };
+  reader.onerror = ()=>{ showDxfError('Could not read file.'); event.target.value=''; };
+  reader.readAsText(file);
+}
+
+function showDxfError(msg){
+  const el = document.getElementById('dxf-err');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function clearDXF(){
+  _dxfKadJson     = null;
+  _dxfKadFilename = '';
+  document.getElementById('dxf-preview').style.display = 'none';
+  document.getElementById('dxf-err').classList.remove('show');
+  document.getElementById('load-dxf').value = '';
+}
+
+/* Init */
+addPackage();
+updateReview();
+</script>
+</body>
+</html>
