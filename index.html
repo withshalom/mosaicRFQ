@@ -9,6 +9,7 @@
   Steel-focused, not steel-exclusive.
   Principal: Shalom Marsjones · 530.802.6493 · shalom@mosaiciron.com · California
   v2 — DXF upload → .kad conversion (parseDXF ported from KADsuite)
+  v3 — Backend migrated Vercel → Netlify (commercial-use-friendly free tier; see NETLIFY_SETUP.md)
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -467,16 +468,17 @@ footer b{color:var(--t2);font-weight:500}
 
 <script>
 /* ════════════════════════════════════════════════════════════════════
-   VERCEL ENDPOINT — set after deploying the serverless function.
-   See VERCEL_SETUP.md for deployment instructions.
+   NETLIFY ENDPOINT — set after deploying the Netlify Function.
+   See NETLIFY_SETUP.md for deployment instructions.
 
-   Format: https://your-project-name.vercel.app/api/submit-rfq
-   Example: https://mosaic-iron.vercel.app/api/submit-rfq
+   Format (relative, once quote.mosaiciron.com points at the Netlify
+   site via the netlify.toml redirect): /api/submit-rfq
+   Or absolute during testing: https://your-site-name.netlify.app/api/submit-rfq
 
    The function receives form data + .kad JSON and emails it with the
    .kad attached. Leave blank during setup to test the form locally.
    ════════════════════════════════════════════════════════════════════ */
-const RFQ_ENDPOINT = '';  // Fill this in after Vercel deployment
+const RFQ_ENDPOINT = '';  // Fill this in after Netlify deployment, e.g. '/api/submit-rfq' — see NETLIFY_SETUP.md
 const RFQ_EMAIL    = 'shalom@mosaiciron.com';
 
 /* ── Work types — each drives the package's metric + deliverables ── */
@@ -773,12 +775,12 @@ function submitRFQ(){
       .then(d=>{ if(d.success) showSuccess('email'); else toast('Submit failed: '+(d.error||'unknown error')); })
       .catch(err=>{ toast('Network error: '+err.message); });
   } else {
-    toast('RFQ_ENDPOINT not configured — see VERCEL_SETUP.md.');
+    toast('RFQ_ENDPOINT not configured — see NETLIFY_SETUP.md.');
   }
 }
 function showSuccess(mode){
   document.getElementById('success-msg').textContent = mode==='email'
-    ? 'Your request was sent to Mosaic Iron, with a reply-to copy to your inbox. We'll be in touch within a business day.'
+    ? 'Your request was sent to Mosaic Iron, with a reply-to copy to your inbox. We\'ll be in touch within a business day.'
     : 'Your email program should now be open with the full request filled in — just hit send. If nothing opened, use "Copy request text" and email it to ' + RFQ_EMAIL + '.';
   const s = document.getElementById('success'); s.style.display='block';
   s.scrollIntoView({behavior:'smooth', block:'center'});
